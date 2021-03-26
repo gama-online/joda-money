@@ -28,6 +28,9 @@ import java.util.regex.Pattern;
 import org.joda.convert.FromString;
 import org.joda.convert.ToString;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+
 /**
  * An amount of money with unrestricted decimal place precision.
  * <p>
@@ -42,6 +45,7 @@ import org.joda.convert.ToString;
  * <p>
  * This class is immutable and thread-safe.
  */
+@Embeddable
 public final class BigMoney implements BigMoneyProvider, Comparable<BigMoneyProvider>, Serializable {
 
     /**
@@ -56,10 +60,12 @@ public final class BigMoney implements BigMoneyProvider, Comparable<BigMoneyProv
     /**
      * The currency, not null.
      */
+    @Column(length = 3)
     private final CurrencyUnit currency;
     /**
      * The amount, not null.
      */
+    @Column(precision = 15, scale = 6)
     private final BigDecimal amount;
 
     //-----------------------------------------------------------------------

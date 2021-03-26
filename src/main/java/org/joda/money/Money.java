@@ -26,6 +26,11 @@ import java.util.Iterator;
 import org.joda.convert.FromString;
 import org.joda.convert.ToString;
 
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.PostLoad;
+import javax.persistence.Transient;
+
 /**
  * An amount of money with the standard decimal places defined by the currency.
  * <p>
@@ -43,6 +48,7 @@ import org.joda.convert.ToString;
  * <p>
  * This class is immutable and thread-safe.
  */
+@Embeddable
 public final class Money implements BigMoneyProvider, Comparable<BigMoneyProvider>, Serializable {
 
     /**
@@ -53,7 +59,14 @@ public final class Money implements BigMoneyProvider, Comparable<BigMoneyProvide
     /**
      * The money, not null.
      */
-    private final BigMoney money;
+    @Transient
+    private BigMoney money;
+
+    @Column(length = 3)
+    private final CurrencyUnit currency;
+
+    @Column(precision = 13, scale = 4)
+    private final BigDecimal amount;
 
     //-----------------------------------------------------------------------
     /**
@@ -347,6 +360,8 @@ public final class Money implements BigMoneyProvider, Comparable<BigMoneyProvide
     @SuppressWarnings("unused")
     private Money() {
         this.money = null;
+        this.amount = null;
+        this.currency = null;
     }
 
     /**
@@ -358,6 +373,8 @@ public final class Money implements BigMoneyProvider, Comparable<BigMoneyProvide
         assert money != null : "Joda-Money bug: BigMoney must not be null";
         assert money.isCurrencyScale() : "Joda-Money bug: Only currency scale is valid for Money";
         this.money = money;
+        this.amount = money.getAmount();
+        this.currency = money.getCurrencyUnit();
     }
 
     /**
@@ -1319,4 +1336,10 @@ public final class Money implements BigMoneyProvider, Comparable<BigMoneyProvide
         return money.toString();
     }
 
+    @SuppressWarnings("unused")
+    @PostLoad
+    void postLoad() {
+        money = currency != null && amount != null ?
+                BigMoney.ofScale(currency, amount, currency.getDecimalPlaces(), RoundingMode.UNNECESSARY) : null;
+    }
 }
